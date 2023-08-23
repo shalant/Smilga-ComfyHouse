@@ -9,7 +9,7 @@ const cartItems = document.querySelector(".cart-items");
 const cartTotal = document.querySelector(".cart-total");
 const cartContent = document.querySelector(".cart-content");
 const productsDOM = document.querySelector(".products-center");
-const btns = document.querySelectorAll(".bag-btn");
+// const btns = document.querySelectorAll(".bag-btn");
 
 //cart
 let cart = [];
@@ -49,7 +49,7 @@ class UI{
                     class="product-img">
                 <button class="bag-btn" data-id=${product.id}>
                     <i class="fas fa-shopping-cart"></i>
-                    add to bag
+                    add to cart
                 </button>
             </div>
             <h3>${product.title}</h3>
@@ -61,9 +61,8 @@ class UI{
     }
 
     getBagButtons() {
-        const buttons = [...document.querySelectorAll
-            (".bag-btn")];
-        const buttonsDOM = buttons;
+        const buttons = [...document.querySelectorAll(".bag-btn")];
+        buttonsDOM = buttons;
         buttons.forEach(button => {
             let id = button.dataset.id;
             let inCart = cart.find(item => item.id === id);
@@ -137,9 +136,26 @@ class UI{
         cartDOM.classList.remove('showCart');
     }
     cartLogic() {
-        clearCartBtn.addEventListener('click', () => {
+        clearCartBtn.addEventListener("click", () => {
             this.clearCart()
         });
+        //cart functionality
+        cartContent.addEventListener('click', event => {
+            if(event.target.classList.contains('remove-item')){
+                let removeItem = event.target;
+                let id = removeItem.dataset.id;
+                cartContent.removeChild(removeItem.parentElement.parentElement);
+                this.removeItem(id);
+            } else if (event.target.classList.contains("fa-chevron-up")) {
+                let addAmount = event.target;
+                let id = addAmount.dataset.id;
+                let tempItem = cart.find(item => item.id === id);
+                tempItem.amount = tempItem.amount + 1;
+                Storage.saveCart(cart);
+                this.setCartValues(cart);
+                addAmount.nextElementSibling.innerText = tempItem.amount;
+            }
+        })
     }
     clearCart() {
         let cartItems = cart.map(item => item.id);
