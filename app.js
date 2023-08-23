@@ -1,10 +1,10 @@
 // variables
 
 const cartBtn = document.querySelector(".cart-btn");
-const closeCartBtn = document.querySelector('.close-cart');
-const clearCartBtn = document.querySelector('.clear-cart');
+const closeCartBtn = document.querySelector(".close-cart");
+const clearCartBtn = document.querySelector(".clear-cart");
 const cartDOM = document.querySelector(".cart");
-const cartOverlay = document.querySelector('.cart-overlay');
+const cartOverlay = document.querySelector(".cart-overlay");
 const cartItems = document.querySelector(".cart-items");
 const cartTotal = document.querySelector(".cart-total");
 const cartContent = document.querySelector(".cart-content");
@@ -14,7 +14,7 @@ const btns = document.querySelectorAll(".bag-btn");
 //cart
 let cart = [];
 //buttons
-let buttomsDOM = [];
+let buttonsDOM = [];
 
 //getting the products
 class Products {
@@ -86,6 +86,7 @@ class UI{
                     // display cart item
                     this.addCartItem(cartItem)
                     // show the cart
+                    this.showCart();
                 });
         });
     }
@@ -100,11 +101,10 @@ class UI{
             (2))
         cartItems.innerText = itemsTotal;
     }
-    addCartItem() {
+    addCartItem(item) {
         const div = document.createElement('div');
         div.classList.add('cart-item');
-        div.innerHTML = `
-            <img src=${item.image} alt="product">
+        div.innerHTML = `<img src=${item.image} alt="product" />
                 <div>
                     <h4>${item.title}</h4>
                     <h5>$${item.price}</h5>
@@ -114,10 +114,52 @@ class UI{
                     <i class="fas fa-chevron-up" data-id=${item.id}></i>
                     <p class="item-amount">${item.amount}</p>
                     <i class="fas fa-chevron-down" data-id=${item.id}></i>
-                </div>
-            `
+                </div>`
             cartContent.appendChild(div);
             console.log(cartContent);
+    }
+    showCart() {
+        cartOverlay.classList.add('transparentBcg');
+        cartDOM.classList.add('showCart');
+    }
+    setupAPP() {
+        cart = Storage.getCart();
+        this.setCartValues(cart);
+        this.populateCart(cart);
+        cartBtn.addEventListener('click', this.showCart)
+        closeCartBtn.addEventListener('click', this.hideCart)
+    }
+    populateCart(cart) {
+        cart.forEach(item => this.addCartItem(item));
+    }
+    hideCart() {
+        cartOverlay.classList.remove('transparentBcg');
+        cartDOM.classList.remove('showCart');
+    }
+    cartLogic() {
+        clearCartBtn.addEventListener('click', () => {
+            this.clearCart()
+        });
+    }
+    clearCart() {
+        let cartItems = cart.map(item => item.id);
+        cartItems.forEach(id => this.removeItem(id));
+        console.log(cartContent.children);
+        while(cartContent.children.length > 0) {
+            cartContent.removeChild(cartContent.children[0]);
+        }
+        this.hideCart();
+    }
+    removeItem(id) {
+        cart = cart.filter(item => item.id !== id);
+        this.setCartValues(cart);
+        Storage.saveCart(cart);
+        let button = this.getSingleButton(id);
+        button.disabled = false;
+        button.innerHTML = `<i class="fas fa-shopping-cart"></i>add to cart`;
+    }
+    getSingleButton(id) {
+        return buttonsDOM.find(button => button.dataset.id === id);
     }
 }
 //local storage
@@ -133,17 +175,23 @@ class Storage {
     static saveCart(cart) {
         localStorage.setItem('cart', JSON.stringify(cart))
     }
+    static getCart() {
+        return localStorage.getItem('cart') ? JSON.parse
+            (localStorage.getItem('cart')) : []
+    }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
     const ui = new UI()
-    const products = new Products()
-
+    const products = new Products();
+    // setup app
+    ui.setupAPP();
     // get all products
     products.getProducts().then(products => {
         ui.displayProducts(products);
         Storage.saveProducts(products);
     }).then(() => {
         ui.getBagButtons();
+        ui.cartLogic();
     })
 });
